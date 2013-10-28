@@ -265,7 +265,17 @@
 
 - (void)updateWithString:(NSString*)text font:(UIFont*)font constrainedToWidth:(CGFloat)maxWidth padding:(CGSize)padding minimumWidth:(CGFloat)minimumWidth
 {
-    CGSize textSize = [text sizeWithFont:font forWidth:maxWidth lineBreakMode:NSLineBreakByTruncatingTail];
+    CGSize textSize;
+    
+    if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 7.0) {
+        NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+        [paragraphStyle setLineBreakMode:NSLineBreakByTruncatingTail];
+        textSize = [text sizeWithAttributes:@{NSFontAttributeName: font,
+                                   NSParagraphStyleAttributeName: paragraphStyle}];
+        textSize.width = (textSize.width > maxWidth) ? maxWidth : textSize.width;
+    } else {
+        textSize = [text sizeWithFont:font forWidth:maxWidth lineBreakMode:NSLineBreakByTruncatingTail];
+    }
     
     textSize.width = MAX(textSize.width, minimumWidth);
     textSize.height += padding.height*2;
