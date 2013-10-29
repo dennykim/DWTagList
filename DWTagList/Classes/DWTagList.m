@@ -22,6 +22,7 @@
 #define BORDER_WIDTH 1.0f
 #define HIGHLIGHTED_BACKGROUND_COLOR [UIColor colorWithRed:0.40 green:0.80 blue:1.00 alpha:0.5]
 #define DEFAULT_AUTOMATIC_RESIZE NO
+#define DEFAULT_HORIZONTALLY_CENTERED NO
 
 @interface DWTagList()
 
@@ -31,7 +32,7 @@
 
 @implementation DWTagList
 
-@synthesize view, textArray, automaticResize;
+@synthesize view, textArray, automaticResize, horizontallyCentered;
 @synthesize tagDelegate = _tagDelegate;
 
 - (id)initWithFrame:(CGRect)frame
@@ -41,6 +42,7 @@
         [self addSubview:view];
         [self setClipsToBounds:YES];
         self.automaticResize = DEFAULT_AUTOMATIC_RESIZE;
+        self.horizontallyCentered = DEFAULT_HORIZONTALLY_CENTERED;
         self.highlightedBackgroundColor = HIGHLIGHTED_BACKGROUND_COLOR;
         self.font = [UIFont systemFontOfSize:FONT_SIZE_DEFAULT];
         self.labelMargin = LABEL_MARGIN_DEFAULT;
@@ -130,9 +132,13 @@
         }
         [subview removeFromSuperview];
     }
-
+    
     CGRect previousFrame = CGRectZero;
     BOOL gotPreviousFrame = NO;
+    
+    NSMutableArray *allButtonsByLine = [[NSMutableArray alloc] init];
+    NSMutableArray *buttonsInLine = [[NSMutableArray alloc] init];
+    BOOL isOnNewLine = YES;
     
     for (NSString *text in textArray) {
         DWTagView *tagView;
@@ -145,15 +151,16 @@
         }
         
         [tagView updateWithString:text
-                           font:self.font
-              constrainedToWidth:self.frame.size.width - (self.horizontalPadding * 2)
-                        padding:CGSizeMake(self.horizontalPadding, self.verticalPadding)
+                             font:self.font
+               constrainedToWidth:self.frame.size.width - (self.horizontalPadding * 2)
+                          padding:CGSizeMake(self.horizontalPadding, self.verticalPadding)
                      minimumWidth:self.minimumWidth
          ];
         
         if (gotPreviousFrame) {
             CGRect newRect = CGRectZero;
             if (previousFrame.origin.x + previousFrame.size.width + tagView.frame.size.width + self.labelMargin > self.frame.size.width) {
+                isOnNewLine = YES;
                 newRect.origin = CGPointMake(0, previousFrame.origin.y + tagView.frame.size.height + self.bottomMargin);
             } else {
                 newRect.origin = CGPointMake(previousFrame.origin.x + previousFrame.size.width + self.labelMargin, previousFrame.origin.y);
@@ -161,12 +168,12 @@
             newRect.size = tagView.frame.size;
             [tagView setFrame:newRect];
         }
-
+        
         previousFrame = tagView.frame;
         gotPreviousFrame = YES;
-
+        
         [tagView setBackgroundColor:[self getBackgroundColor]];
-
+        
         // Davide Cenzi, added gesture recognizer to label
         UITapGestureRecognizer* gesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(touchedTag:)];
         // if labelView is not set userInteractionEnabled, you must do so
@@ -174,15 +181,41 @@
         [tagView addGestureRecognizer:gesture];
         
         [self addSubview:tagView];
-
+        
         if (!_viewOnly) {
             [tagView.button addTarget:self action:@selector(touchDownInside:) forControlEvents:UIControlEventTouchDown];
             [tagView.button addTarget:self action:@selector(touchUpInside:) forControlEvents:UIControlEventTouchUpInside];
             [tagView.button addTarget:self action:@selector(touchDragExit:) forControlEvents:UIControlEventTouchDragExit];
             [tagView.button addTarget:self action:@selector(touchDragInside:) forControlEvents:UIControlEventTouchDragInside];
         }
+        
+        if (self.horizontallyCentered) {
+            if (isOnNewLine) {
+                [allButtonsByLine addObject:buttonsInLine];
+                buttonsInLine = [[NSMutableArray alloc] initWithObjects:tagView, nil];
+                isOnNewLine = NO;
+            } else {
+                [buttonsInLine addObject:tagView];
+            }
+        }
     }
-
+    
+    if (self.horizontallyCentered) {
+        [allButtonsByLine addObject:buttonsInLine];
+        
+        for (int iterLine = 0; iterLine < allButtonsByLine.count; iterLine++) {
+            NSArray *buttons = allButtonsByLine[iterLine];
+            for (int i = 0; i < buttons.count; i++) {
+                CGFloat leftmostOriginPointX = [buttons[0] frame].origin.x;
+                CGFloat rightmostOriginPointX = [buttons[buttons.count - 1] frame].origin.x + [buttons[buttons.count - 1] frame].size.width;
+                CGFloat adjustedOffset = leftmostOriginPointX - (self.contentSize.width - (rightmostOriginPointX - leftmostOriginPointX)) / 2;
+                for (UIButton *b in buttons) {
+                    [b setFrame:CGRectMake(b.frame.origin.x - adjustedOffset, b.frame.origin.y, b.frame.size.width, b.frame.size.height)];
+                }
+            }
+        }
+    }
+    
     sizeFit = CGSizeMake(self.frame.size.width, previousFrame.origin.y + previousFrame.size.height + self.bottomMargin + 1.0f);
     self.contentSize = sizeFit;
 }
@@ -217,14 +250,14 @@
     UIButton *button = (UIButton*)sender;
     [[button superview] setBackgroundColor:[self getBackgroundColor]];
 }
-     
+
 - (UIColor *)getBackgroundColor
 {
-     if (!lblBackgroundColor) {
-         return BACKGROUND_COLOR;
-     } else {
-         return lblBackgroundColor;
-     }
+    if (!lblBackgroundColor) {
+        return BACKGROUND_COLOR;
+    } else {
+        return lblBackgroundColor;
+    }
 }
 
 - (void)dealloc
@@ -271,7 +304,7 @@
         NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
         [paragraphStyle setLineBreakMode:NSLineBreakByTruncatingTail];
         textSize = [text sizeWithAttributes:@{NSFontAttributeName: font,
-                                   NSParagraphStyleAttributeName: paragraphStyle}];
+                                              NSParagraphStyleAttributeName: paragraphStyle}];
         textSize.width = (textSize.width > maxWidth) ? maxWidth : textSize.width;
     } else {
         textSize = [text sizeWithFont:font forWidth:maxWidth lineBreakMode:NSLineBreakByTruncatingTail];
@@ -279,7 +312,7 @@
     
     textSize.width = MAX(textSize.width, minimumWidth);
     textSize.height += padding.height*2;
-
+    
     self.frame = CGRectMake(0, 0, textSize.width+padding.width*2, textSize.height);
     _label.frame = CGRectMake(padding.width, 0, MIN(textSize.width, self.frame.size.width), textSize.height);
     _label.font = font;

@@ -29,6 +29,7 @@
 @property (nonatomic, weak) id<DWTagListDelegate> tagDelegate;
 @property (nonatomic, strong) UIColor *highlightedBackgroundColor;
 @property (nonatomic) BOOL automaticResize;
+@property (nonatomic) BOOL horizontallyCentered;
 @property (nonatomic, retain) UIFont *font;
 @property (nonatomic, assign) CGFloat labelMargin;
 @property (nonatomic, assign) CGFloat bottomMargin;
