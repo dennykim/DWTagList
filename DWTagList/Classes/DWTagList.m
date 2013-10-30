@@ -179,7 +179,6 @@
         // if labelView is not set userInteractionEnabled, you must do so
         [tagView setUserInteractionEnabled:YES];
         [tagView addGestureRecognizer:gesture];
-        
         [self addSubview:tagView];
         
         if (!_viewOnly) {
@@ -288,10 +287,11 @@
         [_button setFrame:self.frame];
         [self addSubview:_button];
         
-        [self.layer setMasksToBounds:YES];
-        [self.layer setCornerRadius:CORNER_RADIUS];
-        [self.layer setBorderColor:BORDER_COLOR];
-        [self.layer setBorderWidth: BORDER_WIDTH];
+        [_button.layer setMasksToBounds:YES];
+        [_button.layer setCornerRadius:CORNER_RADIUS];
+        [_button.layer setBorderColor:BORDER_COLOR];
+        [_button.layer setBorderWidth: BORDER_WIDTH];
+        [_button.layer setShouldRasterize:YES];
     }
     return self;
 }
