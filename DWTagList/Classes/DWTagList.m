@@ -15,10 +15,10 @@
 #define HORIZONTAL_PADDING_DEFAULT 10.0f
 #define VERTICAL_PADDING_DEFAULT 8.0f
 #define BACKGROUND_COLOR [UIColor colorWithRed:1 green:1 blue:1 alpha:1.00]
-#define TEXT_COLOR [UIColor colorWithRed:254.0/255.0 green:211.0/255.0 blue:48.0/255.0 alpha:1.0]
+#define TEXT_COLOR [UIColor colorWithRed:234.0/255.0 green:26.0/255.0 blue:106.0/255.0 alpha:1.0]
 #define TEXT_SHADOW_COLOR [UIColor whiteColor]
 #define TEXT_SHADOW_OFFSET CGSizeMake(0.0f, 1.0f)
-#define BORDER_COLOR [UIColor colorWithRed:254.0/255.0 green:211.0/255.0 blue:48.0/255.0 alpha:1.0].CGColor
+#define BORDER_COLOR [UIColor colorWithRed:234.0/255.0 green:26.0/255.0 blue:106.0/255.0 alpha:1.0].CGColor
 #define BORDER_WIDTH 1.8f
 #define HIGHLIGHTED_BACKGROUND_COLOR [UIColor colorWithRed:0.8 green:0.8 blue:0.8 alpha:0.5]
 #define DEFAULT_AUTOMATIC_RESIZE NO
